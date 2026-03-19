@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Sítio Catarinense - Talhão 250 - Jan/2026</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #fcfcfb;
+    color: #292524;
+}
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    height: 320px;
+    max-height: 400px;
+}
+@media (min-width: 768px) {
+    .chart-container {
+        height: 380px;
+    }
+}
+.tab-active {
+    border-bottom: 2px solid #059669;
+    color: #059669;
+    font-weight: 600;
+}
+.tab-inactive {
+    border-bottom: 2px solid transparent;
+    color: #78716c;
+}
+.tab-inactive:hover {
+    color: #44403c;
+    border-bottom: 2px solid #d6d3d1;
+}
+/* Estilo para a imagem do mapa */
+.map-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #e2e8f0; /* Um cinza claro para o fundo */
+    border: 2px dashed #94a3b8; /* Borda tracejada */
+    border-radius: 0.75rem; /* cantos arredondados */
+}
+</style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+<header class="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center py-4">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🌱</span>
+                <div>
+                    <h1 class="text-xl font-bold text-stone-800">Projeto RVO Agro <span class="text-stone-400 font-normal">|</span> Sítio Catarinense</h1>
+                    <p class="text-sm text-stone-500">Talhão 250 • Safra 2025/2026 • Consultoria Laspro</p>
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0 text-sm text-right text-stone-500">
+                <p>Resp: Grupo Pivetta</p>
+                <p>Análise: Safra de Soja</p>
+            </div>
+        </div>
+        
+        <nav class="flex overflow-x-auto hide-scrollbar mt-2" id="nav-tabs">
+            <button data-target="tab-visao" class="tab-btn tab-inactive whitespace-nowrap py-3 px-4 text-sm font-medium transition-colors">Visão Geral & Manejo</button>
+            <button data-target="tab-ndvi" class="tab-btn tab-active whitespace-nowrap py-3 px-4 text-sm font-medium transition-colors">Monitoramento NDVI (Com Mapa)</button>
+            <button data-target="tab-colheita" class="tab-btn tab-inactive whitespace-nowrap py-3 px-4 text-sm font-medium transition-colors">Estimativa de Colheita</button>
+            <button data-target="tab-riscos" class="tab-btn tab-inactive whitespace-nowrap py-3 px-4 text-sm font-medium transition-colors">Riscos & Protocolos</button>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm flex items-center gap-4">
+            <div class="text-3xl">🗺️</div>
+            <div>
+                <p class="text-xs text-stone-500 uppercase tracking-wider font-semibold">Área Total</p>
+                <p class="text-2xl font-bold text-stone-800">125,01 <span class="text-sm font-normal text-stone-500">ha</span></p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm flex items-center gap-4">
+            <div class="text-3xl">📈</div>
+            <div>
+                <p class="text-xs text-stone-500 uppercase tracking-wider font-semibold">Média Estimada</p>
+                <p class="text-2xl font-bold text-emerald-600">63,96 <span class="text-sm font-normal text-stone-500">sc/ha</span></p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm flex items-center gap-4">
+            <div class="text-3xl">🌾</div>
+            <div>
+                <p class="text-xs text-stone-500 uppercase tracking-wider font-semibold">Produção Total</p>
+                <p class="text-2xl font-bold text-stone-800">7.995,7 <span class="text-sm font-normal text-stone-500">sacas</span></p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm flex items-center gap-4">
+            <div class="text-3xl">✨</div>
+            <div>
+                <p class="text-xs text-stone-500 uppercase tracking-wider font-semibold">Vigor Alto (NDVI)</p>
+                <p class="text-2xl font-bold text-emerald-600">78% <span class="text-sm font-normal text-stone-500">da área</span></p>
+            </div>
+        </div>
+    </div>
+
+    <section id="tab-ndvi" class="tab-content block">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-stone-800 mb-2">Monitoramento Espacial de Vigor (NDVI)</h2>
+            <p class="text-stone-600 max-w-4xl leading-relaxed">
+                Esta seção centraliza a análise de vigor vegetativo do Talhão 250. Abaixo, você encontrará o mapa de satélite Sentinel-2 fornecido para Janeiro de 2026, processado para destacar as zonas de saúde da lavoura. O gráfico e a tabela de resumo contextualizam esses dados com o cronograma fenológico da safra, mostrando como o vigor atual se alinha aos picos produtivos esperados.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 flex flex-col items-center">
+                <h3 class="text-lg font-bold text-stone-800 mb-4 w-full text-left">Mapa de Vigor (Janeiro 2026)</h3>
+               
+               <<div class="w-full flex justify-center items-center overflow-hidden rounded-lg border border-stone-200 shadow-sm p-4 bg-stone-50 h-[320px] md:h-[400px]">
+    <img src="nvdi.png" alt="Mapa NDVI Real" class="max-w-full max-h-full h-auto w-auto block object-contain">
+</div>
+               
+                <div class="mt-4 text-xs text-stone-500 bg-stone-50 p-3 rounded border border-stone-100 w-full">
+                    <strong>Análise do Mapa:</strong> A predominância de cores verdes escuras no mapa visualizado confirma a leitura estatística de 78% de Vigor Alto. No entanto, observe com atenção as bordaduras e carreadores (manchas amarelas e vermelhas) na imagem fornecida, que representam as zonas de vigor médio e baixo descritas na estimativa de colheita.
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 flex flex-col">
+                <h3 class="text-lg font-bold text-stone-800 mb-4">Curva de Vigor (NDVI)</h3>
+                <div class="chart-container flex-grow">
+                    <canvas id="ndviChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 flex flex-col">
+            <h3 class="text-lg font-bold text-stone-800 mb-4 border-b border-stone-100 pb-2">Resumo Estatístico e Contexto Fenológico</h3>
+            <div class="overflow-x-auto flex-grow">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="text-xs text-stone-500 uppercase bg-stone-50">
+                        <tr>
+                            <th class="px-4 py-3 rounded-tl-lg">Data</th>
+                            <th class="px-4 py-3">DAP (Dias Pós-Plantio)</th>
+                            <th class="px-4 py-3">Estágio Fenológico</th>
+                            <th class="px-4 py-3 rounded-tr-lg">Observação da Planta</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-100">
+                        <tr class="hover:bg-stone-50 transition-colors">
+                            <td class="px-4 py-3 font-medium text-stone-800">25/10/25</td>
+                            <td class="px-4 py-3 text-stone-600">5 dias</td>
+                            <td class="px-4 py-3 text-stone-600">VE (Emergência)</td>
+                            <td class="px-4 py-3 text-stone-600">Planta emerge do solo.</td>
+                        </tr>
+                        <tr class="hover:bg-stone-50 transition-colors bg-emerald-50/30">
+                            <td class="px-4 py-3 font-medium text-emerald-700">10/01/26</td>
+                            <td class="px-4 py-3 font-medium text-emerald-700"><strong>82 dias</strong></td>
+                            <td class="px-4 py-3 font-medium text-emerald-700"><strong>R1 (Início Floração) / R3 (Vagens)</strong></td>
+                            <td class="px-4 py-3 font-medium text-emerald-700"><strong>Auge do Vigor.</strong> Máxima fotossíntese para proteger vagens.</td>
+                        </tr>
+                        <tr class="hover:bg-stone-50 transition-colors">
+                            <td class="px-4 py-3 font-medium text-stone-800">02/02/26</td>
+                            <td class="px-4 py-3 text-stone-600">105 dias</td>
+                            <td class="px-4 py-3 text-stone-600">R5 (Enchimento de Grãos) / R6</td>
+                            <td class="px-4 py-3 text-stone-600">Grãos cheios. Início da transição de nutrientes foliares.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 text-xs text-stone-500 bg-stone-50 p-3 rounded border border-stone-100">
+                <strong>Análise ISA:</strong> O pico de vigor máximo lido em Janeiro de 2026 ($0,551$) coincide perfeitamente com o estágio reprodutivo crítico de formação de vagens ($R3$), provando que a nutrição de base e a chuva vegetativa foram fundamentais para sustentar o teto produtivo nas áreas de vigor alto.
+            </div>
+        </div>
+    </section>
+
+    <section id="tab-visao" class="tab-content hidden">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-stone-800 mb-2">Visão Geral e Dinâmica de Manejo</h2>
+            <p class="text-stone-600 max-w-4xl leading-relaxed">
+                Esta seção apresenta o contexto cronológico do Talhão 250. O sucesso produtivo é resultado de um planejamento operacional alinhado às condições edafoclimáticas. Acompanhe a evolução desde o plantio até a defesa sanitária.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+                <h3 class="text-lg font-bold text-stone-800 mb-6 border-b border-stone-100 pb-2">Linha do Tempo da Safra</h3>
+                <div class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-stone-300 before:to-transparent">
+                    
+                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-stone-100 text-stone-500 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
+                            🌱
+                        </div>
+                        <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-stone-50 p-4 rounded-lg border border-stone-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="font-bold text-stone-800">Implantação</h4>
+                                <span class="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">Out 2025</span>
+                            </div>
+                            <p class="text-sm text-stone-600">Plantio entre 20/10 e 25/10. Acumulado estratégico de 120mm de chuva. Embebição uniforme das sementes.</p>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-stone-100 text-stone-500 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
+                            🌧️
+                        </div>
+                        <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-stone-50 p-4 rounded-lg border border-stone-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="font-bold text-stone-800">Evolução Vegetativa</h4>
+                                <span class="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">Nov - Dez 2025</span>
+                            </div>
+                            <p class="text-sm text-stone-600">Regime pluviométrico excepcional de 454mm (picos de 100mm em 08/12 e 18/12). Crescimento vigoroso sem estresse hídrico.</p>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-stone-100 text-stone-500 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
+                            🛡️
+                        </div>
+                        <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-stone-50 p-4 rounded-lg border border-stone-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="font-bold text-stone-800">Defesa Sanitária</h4>
+                                <span class="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">Jan - Fev 2026</span>
+                            </div>
+                            <p class="text-sm text-stone-600">Aplicação de Clorfenapir (27/01) para Spodoptera. Reforço com Acefato e Lufenuron (06 e 20/02) protegendo vagens.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-stone-800 mb-4 border-b border-stone-100 pb-2">Nutrição de Base</h3>
+                    <p class="text-sm text-stone-600 mb-4">A fertilização pesada foi a base do teto produtivo, garantindo suporte para o pico de vigor (R1).</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3">
+                            <span class="text-xl">🪨</span>
+                            <div>
+                                <p class="font-semibold text-stone-800 text-sm">390 kg/ha - Super Simples</p>
+                                <p class="text-xs text-stone-500">Garante sistema radicular profundo.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-xl">🧂</span>
+                            <div>
+                                <p class="font-semibold text-stone-800 text-sm">200 kg/ha - KCl (Potássio)</p>
+                                <p class="text-xs text-stone-500">Vital para regulação osmótica e fotossíntese nos picos de sol.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-emerald-50 rounded-xl border border-emerald-100 shadow-sm p-6">
+                    <h3 class="text-sm font-bold text-emerald-800 mb-2 uppercase tracking-wide">💡 Insight Técnico</h3>
+                    <p class="text-sm text-emerald-700 leading-relaxed">
+                        A convergência entre os <strong>120mm no plantio</strong>, os <strong>454mm no vegetativo</strong> e a alta carga de <strong>Fósforo e Potássio</strong> criaram uma "fábrica" de fotoassimilados que funcionou em capacidade máxima, blindando a planta contra veranicos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tab-colheita" class="tab-content hidden">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-stone-800 mb-2">Estimativa de Colheita e Produtividade</h2>
+            <p class="text-stone-600 max-w-4xl leading-relaxed">
+                Cálculo de produtividade baseado no método de Média Ponderada por Zona de Vigor. As áreas com maior sanidade foliar, claramente visíveis no mapa de satélite na seção anterior, sustentam o volume principal da produção estimada para a safra.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 flex flex-col items-center">
+                <h3 class="text-lg font-bold text-stone-800 mb-2 w-full text-left">Distribuição de Área por Vigor</h3>
+                <p class="text-xs text-stone-500 w-full text-left mb-4">Percentual do Talhão 250 classificado no QGIS.</p>
+                <div class="chart-container w-full">
+                    <canvas id="areaChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 flex flex-col items-center lg:col-span-2">
+                <h3 class="text-lg font-bold text-stone-800 mb-2 w-full text-left">Produção Estimada (Sacas por Zona)</h3>
+                <p class="text-xs text-stone-500 w-full text-left mb-4">Volume total projetado considerando os potenciais de 72, 45 e 15 sc/ha.</p>
+                <div class="chart-container w-full">
+                    <canvas id="productionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+            <h3 class="text-lg font-bold text-stone-800 mb-4 border-b border-stone-100 pb-2">Análise Consolidada da ISA</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="border-l-4 border-emerald-500 pl-4">
+                    <p class="text-sm text-stone-500 uppercase font-semibold mb-1">O Peso do Vigor Alto</p>
+                    <p class="text-sm text-stone-700">A Zona Alta (78% da área, 97,51 ha) sustenta o lucro. Ao atingir o teto de <strong>72 sc/ha</strong>, ela sozinha entrega <strong>7.020 sacas</strong>, o que representa quase 90% de toda a colheita do talhão.</p>
+                </div>
+                <div class="border-l-4 border-amber-500 pl-4">
+                    <p class="text-sm text-stone-500 uppercase font-semibold mb-1">Impacto das Bordaduras</p>
+                    <p class="text-sm text-stone-700">Zonas de carreadores e Vigor Baixo (7% da área) puxam a média para 63,96 sc/ha, rendendo apenas 15 sc/ha. Um desvio esperado e aceitável da meta original de 65 sc/ha.</p>
+                </div>
+                <div class="border-l-4 border-stone-400 pl-4 bg-stone-50 p-3 rounded-r-lg">
+                    <p class="text-xs text-stone-500 uppercase tracking-wider font-bold mb-1">Total a Colher</p>
+                    <p class="text-3xl font-black text-stone-800">7.995<span class="text-lg font-normal">,7 sc</span></p>
+                    <p class="text-xs text-stone-500 mt-1">Faltam apenas 4 sacas para atingir 8.000, recuperáveis via regulagem fina da colheitadeira.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tab-riscos" class="tab-content hidden">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-stone-800 mb-2">Gestão de Riscos & Protocolos Operacionais</h2>
+            <p class="text-stone-600 max-w-4xl leading-relaxed">
+                A reta final apresenta desafios climáticos que podem erodir a rentabilidade. Esta seção traz os alertas para a colheita, uma calculadora de recuperação de perdas mecânicas e o resumo dos protocolos de coleta em campo.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="space-y-6">
+                <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">⚠️</div>
+                    <h3 class="text-lg font-bold text-red-800 mb-3 border-b border-red-100 pb-2">Risco Crítico: Humidade e Qualidade</h3>
+                    <ul class="space-y-3 text-sm text-stone-700">
+                        <li class="flex gap-2"><span class="text-red-500">💧</span> <strong>Humidade Elevada (>14%):</strong> Exige secagem artificial, elevando custos logísticos.</li>
+                        <li class="flex gap-2"><span class="text-red-500">🔥</span> <strong>Brotamento e Ardor:</strong> Vagens maduras sob chuva contínua causam fermentação ou germinação, gerando grandes descontos na classificação.</li>
+                        <li class="flex gap-2"><span class="text-red-500">🌿</span> <strong>Sujidade/Impurezas:</strong> Solo encharcado adere à plataforma. Rebrota de ervas daninhas mancha o tegumento da soja.</li>
+                    </ul>
+                    <div class="mt-4 bg-red-50 p-3 rounded text-sm text-red-800 border border-red-100 font-medium">
+                        Recomendação: Monitoramento horário e priorização de janelas de sol, mesmo colhendo com 15-16% para evitar perda total no campo.
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-stone-800 mb-3 border-b border-stone-100 pb-2">Protocolo de Campo (Checklist)</h3>
+                    <p class="text-sm text-stone-600 mb-3">Resumo dos 6 Blocos do Protocolo Pivetta para validação técnica.</p>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-stone-700">
+                        <div class="flex items-center gap-2 border p-2 rounded bg-stone-50"><span>1️⃣</span> Identificação & Plantio</div>
+                        <div class="flex items-center gap-2 border p-2 rounded bg-stone-50"><span>2️⃣</span> Nutrição (K, P)</div>
+                        <div class="flex items-center gap-2 border p-2 rounded bg-stone-50"><span>3️⃣</span> Fenologia (Fases V e R)</div>
+                        <div class="flex items-center gap-2 border p-2 rounded bg-stone-50"><span>4️⃣</span> Sanidade (Defensivos)</div>
+                        <div class="flex items-center gap-2 border p-2 rounded bg-stone-50"><span>5️⃣</span> Clima & Operação (Humidade)</div>
+                        <div class="flex items-center gap-2 border p-2 rounded bg-stone-50"><span>📸</span> Registro Visual (Obrigatório)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 flex flex-col">
+                <h3 class="text-lg font-bold text-stone-800 mb-2">Diagnóstico e Recuperação de Perdas</h3>
+                <p class="text-sm text-stone-600 mb-4 border-b border-stone-100 pb-3">
+                    Ajustes de colhedora baseados na <strong>Planilha de Registro</strong> podem recuperar de 1 a 5 sc/ha. Teste 3x ao dia (0,25m²).
+                </p>
+                
+                <div class="bg-stone-50 rounded-lg p-4 mb-5 border border-stone-200 flex-grow">
+                    <h4 class="font-bold text-sm text-stone-800 mb-3">Guia Rápido: O que o chão diz?</h4>
+                    <ul class="space-y-2 text-xs text-stone-700">
+                        <li><strong>Grão Inteiro:</strong> Vento forte/Peneira aberta $\rightarrow$ <em>Reduza o vento.</em></li>
+                        <li><strong>Grão na Vagem:</strong> Trilha insuficiente $\rightarrow$ <em>Feche côncavo/aumente rotor.</em></li>
+                        <li><strong>Grão Quebrado:</strong> Trilha agressiva $\rightarrow$ <em>Abra côncavo/reduza rotor.</em></li>
+                    </ul>
+                </div>
+
+                <div class="bg-emerald-50 rounded-lg p-5 border border-emerald-200">
+                    <h4 class="font-bold text-emerald-800 mb-2 text-sm">Simulador de Recuperação (Talhão: 125,01 ha)</h4>
+                    <div class="flex items-center gap-4 mb-4">
+                        <label for="recoveryInput" class="text-sm text-emerald-700 font-medium">Sacas salvas por hectare:</label>
+                        <select id="recoveryInput" class="border border-emerald-300 rounded p-1 text-sm bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="1">1 saca/ha</option>
+                            <option value="2">2 sacas/ha</option>
+                            <option value="3" selected>3 sacas/ha</option>
+                            <option value="4">4 sacas/ha</option>
+                            <option value="5">5 sacas/ha</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between items-end border-t border-emerald-200 pt-3">
+                        <span class="text-sm text-emerald-700">Total Recuperado:</span>
+                        <span id="recoveryResult" class="text-2xl font-black text-emerald-700">375,0 sacas</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Tab Navigation Logic
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    
+    // Inicia gráficos na tab NDVI que já está visível
+    initNdviChart();
+    let colheitaChartsInitialized = false;
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Remove active classes
+            tabs.forEach(t => {
+                t.classList.remove('tab-active');
+                t.classList.add('tab-inactive');
+            });
+            contents.forEach(c => {
+                c.classList.remove('block');
+                c.classList.add('hidden');
+            });
+
+            // Add active class to clicked
+            tab.classList.add('tab-active');
+            tab.classList.remove('tab-inactive');
+            const targetId = tab.getAttribute('data-target');
+            document.getElementById(targetId).classList.remove('hidden');
+            document.getElementById(targetId).classList.add('block');
+
+            // Initialize charts only when navigating to Colheita tab for the first time
+            if (targetId === 'tab-colheita' && !colheitaChartsInitialized) {
+                initColheitaCharts();
+                colheitaChartsInitialized = true;
+            }
+        });
+    });
+
+    // Chart Initialization
+    function initNdviChart() {
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#78716c';
+        
+        // 1. NDVI Line Chart
+        const ctxNdvi = document.getElementById('ndviChart').getContext('2d');
+        new Chart(ctxNdvi, {
+            type: 'line',
+            data: {
+                labels: ['Out 25 (VE)', 'Nov 25 (V1)', 'Jan 26 (R3)', 'Fev 26 (R5)'],
+                datasets: [
+                    {
+                        label: 'NDVI Máximo',
+                        data: [0.027, 0.127, 0.551, 0.680],
+                        borderColor: '#059669', // Emerald 600
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#059669',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'NDVI Mínimo',
+                        data: [-0.076, 0.064, 0.174, 0.008],
+                        borderColor: '#d6d3d1', // Stone 300
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#d6d3d1',
+                        pointRadius: 4,
+                        fill: false,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(41, 37, 36, 0.9)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Índice NDVI' }
+                    }
+                }
+            }
+        });
+    }
+
+    function initColheitaCharts() {
+        // 2. Area Doughnut Chart
+        const ctxArea = document.getElementById('areaChart').getContext('2d');
+        new Chart(ctxArea, {
+            type: 'doughnut',
+            data: {
+                labels: ['Vigor Alto', 'Vigor Médio', 'Vigor Baixo'],
+                datasets: [{
+                    data: [78, 15, 7],
+                    backgroundColor: [
+                        '#10b981', // Emerald 500
+                        '#fcd34d', // Amber 300
+                        '#d6d3d1'  // Stone 300
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.label + ': ' + context.raw + '% da Área';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Production Bar Chart
+        const ctxProd = document.getElementById('productionChart').getContext('2d');
+        new Chart(ctxProd, {
+            type: 'bar',
+            data: {
+                labels: ['Alto (72 sc/ha)', 'Médio (45 sc/ha)', 'Baixo (15 sc/ha)'],
+                datasets: [{
+                    label: 'Sacas Projetadas',
+                    data: [7020.7, 843.8, 131.2],
+                    backgroundColor: [
+                        '#10b981', 
+                        '#fcd34d', 
+                        '#d6d3d1'  
+                    ],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('pt-BR').format(context.parsed.y) + ' sc';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Volume (Sacas)' },
+                        grid: { borderDash: [4, 4] }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            callback: function(value) {
+                                const label = this.getLabelForValue(value);
+                                return label.length > 16 ? label.substr(0, 16) + '...' : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Loss Calculator Logic
+    const areaTotal = 125.01;
+    const selectEl = document.getElementById('recoveryInput');
+    const resultEl = document.getElementById('recoveryResult');
+
+    function updateCalculator() {
+        const sacasPerHa = parseFloat(selectEl.value);
+        const total = areaTotal * sacasPerHa;
+        resultEl.textContent = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(total) + ' sacas';
+    }
+
+    selectEl.addEventListener('change', updateCalculator);
+    // Initial calculation
+    updateCalculator();
+});
+</script>
+</body>
+</html>
